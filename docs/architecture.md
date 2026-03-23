@@ -8,26 +8,20 @@ cez TCP (priamo v LAN alebo cez VPN ako Tailscale/WireGuard) a tvoria peer-to-pe
 
 ## Vrstvy systému
 
-```
-┌─────────────────────────────────────────────────┐
-│                   CLI Menu (main.c)             │
-│      Používateľské rozhranie, animácie          │
-├─────────────────────────────────────────────────┤
-│              Wallet (wallet.c)                  │
-│     Ed25519 kľúče, podpisovanie transakcií      │
-├─────────────────────────────────────────────────┤
-│            Blockchain (chain.c)                 │
-│    Reťazec blokov, validácia, konsenzus         │
-├──────────────────────┬──────────────────────────┤
-│   Block (block.c)    │   Transaction (tx.c)     │
-│  SHA-256, mining     │  UTXO, poplatky          │
-├──────────────────────┴──────────────────────────┤
-│             Network (net.c)                     │
-│      TCP server/klient, peer management         │
-├─────────────────────────────────────────────────┤
-│           Protocol (protocol.c)                 │
-│     JSON serializácia/deserializácia správ      │
-└─────────────────────────────────────────────────┘
+```mermaid
+block-beta
+    columns 1
+    CLI["CLI Menu (main.c)\nPoužívateľské rozhranie, animácie"]
+    Wallet["Wallet (wallet.c)\nEd25519 kľúče, podpisovanie transakcií"]
+    Blockchain["Blockchain (chain.c)\nReťazec blokov, validácia, konsenzus"]
+
+    columns 2
+    Block["Block (block.c)\nSHA-256, mining"]
+    Transaction["Transaction (tx.c)\nUTXO, poplatky"]
+
+    columns 1
+    Network["Network (net.c)\nTCP server/klient, peer management"]
+    Protocol["Protocol (protocol.c)\nJSON serializácia/deserializácia správ"]
 ```
 
 ## Moduly
@@ -92,36 +86,55 @@ cez TCP (priamo v LAN alebo cez VPN ako Tailscale/WireGuard) a tvoria peer-to-pe
 
 ### Ťaženie bloku
 
-1. Používateľ zvolí `[1] Ťažiť blok`
-2. Vytvorí sa nový blok s indexom `last + 1` a `prev_hash = last.hash`
-3. Zozbierajú sa transakcie z mempoolu, spočítajú sa fees
-4. Vytvorí sa coinbase TX (odmena 50 + fees)
-5. Mining loop: `nonce++` kým `SHA-256(block)` nezačína na `00`
-6. Blok sa pridá do chainu a broadcastuje peerom
+```mermaid
+flowchart TD
+    A["[1] Ťažiť blok"] --> B["Vytvorí nový blok\nindex = last + 1\nprev_hash = last.hash"]
+    B --> C["Zozbiera TX z mempoolu\nSpočíta fees"]
+    C --> D["Vytvorí coinbase TX\n(odmena 50 + fees)"]
+    D --> E["Mining: nonce++\nkým SHA-256 nezačína '00'"]
+    E --> F["Blok pridaný do chainu"]
+    F --> G["Broadcast peerom"]
+```
 
 ### Odoslanie transakcie
 
-1. Používateľ zadá adresu príjemcu, sumu a poplatok (min. 1 coin)
-2. Overí sa zostatok (suma + fee ≤ balance)
-3. Vytvorí sa TX, podpíše sa privátnym kľúčom (Ed25519)
-4. TX sa pridá do lokálneho mempoolu
-5. TX sa broadcastuje peerom
-6. **TX čaká v mempoole, kým ju ťažiar zahrnie do bloku** — bez ťaženia sa transakcia nepotvrdí
+```mermaid
+flowchart TD
+    A["Zadaj príjemcu, sumu, poplatok"] --> B{"zostatok ≥ suma + fee?"}
+    B -- NIE --> C["Nedostatočný zostatok"]
+    B -- ÁNO --> D["Vytvorí TX + Ed25519 podpis"]
+    D --> E["Pridá do mempoolu"]
+    E --> F["Broadcast peerom"]
+    F --> G["TX čaká v mempoole\nkým ju ťažiar zahrnie do bloku"]
+```
 
 ### Pripojenie peera
 
-1. Node A sa pripojí k Node B cez TCP
-2. Oba nodes si navzájom vyžiadajú chain (REQUEST_CHAIN)
-3. Ak má peer dlhší platný chain, nahradí lokálny (longest chain wins)
-4. **Mempool sa synchronizuje** peer pošle všetky čakajúce TX novému node
-5. Od tohto momentu sa bloky a TX automaticky broadcastujú
+```mermaid
+sequenceDiagram
+    participant A as Node A
+    participant B as Node B (nový)
+
+    B->>A: TCP connect
+    A->>B: REQUEST_CHAIN
+    B->>A: REQUEST_CHAIN
+    A->>B: CHAIN_RESPONSE
+    B->>A: CHAIN_RESPONSE
+
+    Note over A,B: Dlhší platný chain vyhráva
+
+    A->>B: NEW_TX (mempool TX #1)
+    A->>B: NEW_TX (mempool TX #2)
+
+    Note over B: Má blockchain + čakajúce TX\nMôže ťažiť a potvrdzovať
+```
 
 ### Synchronizácia mempoolu
 
 Mempool je lokálny pre každý node. Aby nový node mohol ťažiť a potvrdiť
 čakajúce transakcie, pri pripojení dostane všetky TX z mempoolu peera.
 
-Bez tejto synchronizácie by nový node nevedel o nepotrvdených transakciách
+Bez tejto synchronizácie by nový node nevedel o nepotvrdených transakciách
 a vyťažený blok by obsahoval len coinbase odmenu.
 
 ## Dôležité pravidlá

@@ -1,3 +1,10 @@
 # Vibe Coder project data
 .LLM/
 build/
+.env
+.env.*
+*.pem
+*.key
+credentials.json
+id_rsa
+id_ed25519

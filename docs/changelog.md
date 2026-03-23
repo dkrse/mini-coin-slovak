@@ -2,6 +2,35 @@
 
 Všetky zmeny v projekte MiniCoin.
 
+## [0.5.0] — 2026-03-23
+
+### Pridané
+- **docs/algorithms.md** — nová dokumentácia algoritmov a princípov
+  - Ako funguje ťažba v Bitcoine (prečo je zámerne pomalá)
+  - Proof of Work, princíp, asymetria, SHA-256
+  - Implementácia ťažby v MiniCoin (difficulty 2, ~256 pokusov)
+  - Štruktúra bloku a prepojenie blokov
+  - Transakcie, coinbase, mempool
+  - Validácia blockchainu
+  - Konsenzus, najdlhší reťazec vyhráva
+  - Peňaženka a Ed25519 podpisy
+  - P2P sieť a synchronizácia
+  - Porovnávacia tabuľka MiniCoin vs Bitcoin
+- **docs/deep-dive.md** — rozšírená dokumentácia pokročilých konceptov
+  - Merkle strom a SPV verifikácia
+  - UTXO model vs. kumulatívny súčet (s príkladom Janko → Marienka)
+  - Double-spending útok – scenár, obrana, pravdepodobnosti
+  - Halving a ekonomika Bitcoinu (emisná krivka, tabuľka halvingov)
+  - Cesta transakcie od vytvorenia po potvrdenie (kompletný flowchart)
+  - Ed25519 vs ECDSA (secp256k1), porovnanie, prečo Bitcoin nepoužíva Ed25519
+  - Časová os Bitcoin protokolu (2008–2140)
+  - Praktické príklady (hashe, platný/neplatný blok, JSON správy, overenie podpisu)
+
+### Zmenené
+- **docs/architecture.md** — ASCII diagramy nahradené Mermaid diagramami (vrstvy, dátové toky, sequence diagramy)
+- **README.md** — ASCII diagramy (Merkle tree, sieťová topológia) nahradené Mermaid, pridané odkazy na algorithms.md a deep-dive.md, aktualizovaná štruktúra projektu
+- Všetky docs používajú slovenské mená (Janko, Marienka, Eva) namiesto Alice/Bob
+
 ## [0.4.0] — 2026-03-22
 
 ### Pridané

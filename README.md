@@ -128,12 +128,10 @@ Nie je potrebný žiadny tunel ani špeciálna konfigurácia.
 
 ### Scenár s 3 nodes (LAN + VPN)
 
-```
-PC-A (LAN: 192.168.1.100) ─── LAN ─── PC-B (LAN: 192.168.1.110)
-         │
-     Tailscale
-         │
-PC-C (Tailscale: 100.64.0.2)
+```mermaid
+graph LR
+    A["PC-A\n192.168.1.100"] <-->|LAN| B["PC-B\n192.168.1.110"]
+    A <-->|Tailscale| C["PC-C\n100.64.0.2"]
 ```
 
 1. **A** spustí minicoin, pripojí sa na **C** (cez Tailscale IP)
@@ -206,14 +204,18 @@ v tejto demo verzii sa stratia).
 
 V Bitcoine sa transakcie v bloku hashujú do stromovej štruktúry:
 
-```
-          Root Hash
-         /        \
-    Hash AB        Hash CD
-    /    \         /    \
- Hash A  Hash B  Hash C  Hash D
-   |       |       |       |
-  TX A    TX B    TX C    TX D
+```mermaid
+graph TD
+    ROOT["Root Hash"] --> HAB["Hash AB"]
+    ROOT --> HCD["Hash CD"]
+    HAB --> HA["Hash A"]
+    HAB --> HB["Hash B"]
+    HCD --> HC["Hash C"]
+    HCD --> HD["Hash D"]
+    HA --> TXA["TX A"]
+    HB --> TXB["TX B"]
+    HC --> TXC["TX C"]
+    HD --> TXD["TX D"]
 ```
 
 Výhoda: na overenie jednej transakcie netreba stiahnuť celý blok, stačí
@@ -273,6 +275,8 @@ MiniCoin má len jednoduché "sender → receiver" s jedným Ed25519 podpisom.
 │   └── wallet.c
 └── docs/                    # Dokumentácia
     ├── architecture.md      # Architektúra systému
+    ├── algorithms.md        # Algoritmy a princípy (PoW, SHA-256, ťažba)
+    ├── deep-dive.md         # Deep dive (Merkle, UTXO, double-spending, halving)
     ├── changelog.md         # História zmien
     └── diagrams.md          # Mermaid diagramy
 ```
@@ -280,6 +284,8 @@ MiniCoin má len jednoduché "sender → receiver" s jedným Ed25519 podpisom.
 ## Dokumentácia
 
 - [Architektúra](docs/architecture.md) — podrobný popis vrstiev a modulov
+- [Algoritmy a princípy](docs/algorithms.md) — PoW, SHA-256, ťažba, konsenzus, podpisy
+- [Deep Dive](docs/deep-dive.md) — Merkle strom, UTXO, double-spending, halving, Ed25519 vs ECDSA
 - [Diagramy](docs/diagrams.md) — Mermaid diagramy procesov a dátových tokov
 - [Changelog](docs/changelog.md) — história zmien
 
